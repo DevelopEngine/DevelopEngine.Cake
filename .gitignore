@@ -1,0 +1,4 @@
+dist/
+tools/**
+!tools/packages.config
+!tools/Modules/packages.config
