@@ -1,7 +1,6 @@
 #tool nuget:?package=docfx.console&version=2.18.5
 #addin nuget:?package=Cake.DocFx&version=0.5.0
 
-var fallbackVersion = Argument<string>("force-version", EnvironmentVariable("FALLBACK_VERSION") ?? "0.1.0");
 var packageVersion = string.Empty;
 var testResultsPath = MakeAbsolute(Directory(artifacts + "./test-results"));
 
