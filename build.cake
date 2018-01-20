@@ -36,7 +36,15 @@ Teardown(ctx =>
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
 
+Task("Clean")
+	.Does(() =>
+{
+	Information("Cleaning common files...");
+	CleanDirectory(artifacts);
+});
+
 Task("NuGet")
+	.IsDependentOn("Clean")
 	.Does(() => 
 {
 	CreateDirectory(artifacts + "package");
