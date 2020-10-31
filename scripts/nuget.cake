@@ -1,18 +1,18 @@
 Task("NuGet")
     .IsDependentOn("Build")
-    .Does(() =>
+    .Does<BuildData>(build =>
 {
     Information("Building NuGet package");
-    CreateDirectory(artifacts + "package/");
+    CreateDirectory(build.ArtifactsPath + "package/");
     var packSettings = new DotNetCorePackSettings {
-        Configuration = configuration,
+        Configuration = build.Configuration,
         NoBuild = true,
-        OutputDirectory = $"{artifacts}package",
+        OutputDirectory = $"{build.ArtifactsPath}package",
         ArgumentCustomization = args => args
-            .Append($"/p:Version=\"{packageVersion}\"")
-            .Append("/p:NoWarn=\"NU1701 NU1602\"")
+            .Append($"/p:Version=\"{build.BuildVersion}\"")
+            .Append("/p:NoWarn=\"NU1505\"")
     };
-    foreach(var project in projects.SourceProjectPaths) {
+    foreach(var project in build.Projects.SourceProjectPaths) {
         Information($"Packing {project.GetDirectoryName()}...");
         DotNetCorePack(project.FullPath, packSettings);
     }

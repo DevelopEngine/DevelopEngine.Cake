@@ -1,3 +1,12 @@
+public partial class BuildData {
+	public bool ReleaseBuild {get;set;}
+	public ProjectCollection Projects {get;set;}
+	public string ArtifactsPath {get;set;} = "./dist/";
+	public string BuildVersion {get;set;}
+	public string Configuration {get;set;} = "Release";
+	public List<string> Frameworks {get;set;} = new List<string> { "netstandard2.0"};
+}
+
 List<NuSpecContent> GetContent(IEnumerable<string> frameworks, ProjectCollection projects, string configuration, Func<SolutionProject, bool> projectFilter = null) {
     projectFilter = projectFilter ?? (p => true);
     var content = new List<NuSpecContent>();
@@ -34,18 +43,4 @@ ProjectCollection GetProjects(ConvertableFilePath slnPath, string configuration)
         TestProjects = projects.Where(p => p.Name.Contains(".Tests"))
     };
     
-}
-
-
-public string GetRuntimeBuild(string runtime) {
-    var commands = new Dictionary<string, string> {
-        ["centos.7-x64"] = "-t rpm -d libunwind -d libicu",
-        ["fedora.25-x64"] = "-t rpm -d libunwind -d libicu",
-        ["ubuntu.14.04-x64"] = "-t deb -d libunwind8 -d libicu52",
-        ["ubuntu.16.04-x64"] = "-t deb -d libunwind8 -d libicu52",
-        ["debian.8-x64"] = "-t deb -d libunwind8 -d libicu52",
-        ["rhel.7-x64"] = "-t rpm -d libunwind -d libicu"
-    };
-    var s = commands[runtime];
-    return s;
 }

@@ -1,5 +1,6 @@
 #load "scripts/version.cake"
 #load "scripts/publish.cake"
+#load "scripts/helpers.cake"
 
 ///////////////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -21,9 +22,15 @@ Setup(ctx =>
 	Information("Running tasks...");
 	CreateDirectory(artifacts);
 	packageVersion = BuildVersion(fallbackVersion);
-	if (publish) {
-		Information("Publishing build artifacts!");
-	}
+});
+Setup<BuildData>(ctx => 
+{
+	Information("Running build setup...");
+	var publish = HasEnvironmentVariable("GITHUB_REF") 
+        && (EnvironmentVariable("GITHUB_REF").StartsWith("refs/tags/v") || EnvironmentVariable("GITHUB_REF") == "refs/heads/master");
+	return new BuildData {
+		ReleaseBuild = !string.IsNullOrWhiteSpace(EnvironmentVariable("NUGET_API_KEY")) && publish
+	};
 });
 
 Teardown(ctx =>
@@ -66,8 +73,8 @@ Task("NuGet")
 		Summary			= "Reusable build scripts for DevelopEngine.",
 		ProjectUrl		= new Uri("https://github.com/DevelopEngine/DevelopEngine.Cake"),
 		IconUrl			= new Uri("https://cdn.rawgit.com/cake-contrib/graphics/a5cf0f881c390650144b2243ae551d5b9f836196/png/cake-contrib-medium.png"),
-		LicenseUrl		= new Uri("https://raw.githubusercontent.com/DevelopEngine/DevelopEngine.Cake/master/LICENSE"),
-		Copyright		= "Alistair Chapman 2017",
+		License			= new NuSpecLicense { Type = "expression", Value = "MIT" },
+		Copyright		= "Alistair Chapman 2020",
 		Tags			= new[] { "cake" },
 		OutputDirectory = artifacts + "/package",
 		Files			= content
@@ -78,6 +85,6 @@ Task("NuGet")
 });
 
 Task("Default")
-	.IsDependentOn("Publish");
+	.IsDependentOn("Publish-NuGet-Package");
 
 RunTarget(target);

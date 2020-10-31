@@ -1,14 +1,16 @@
-var publish = Argument<bool>("publish", false);
+#tool "nuget:https://api.nuget.org/v3/index.json?package=nuget.commandline&version=5.3.1"
 
-var shouldPublish = publish && (!string.IsNullOrWhiteSpace(EnvironmentVariable("NUGET_API_KEY")));
-
-Task("Publish")
-	.WithCriteria(() => shouldPublish)
-	.IsDependentOn("NuGet")
-	.Does(() =>
-{
-	NuGetPush(GetFiles($"{artifacts}package/*.nupkg"), new NuGetPushSettings {
-		Source = "https://api.nuget.org/v3/index.json",
-		ApiKey = EnvironmentVariable("NUGET_API_KEY")
-	});
+Task("Publish-NuGet-Package")
+.IsDependentOn("NuGet")
+// .IsDependeeOf("Publish")
+.WithCriteria<BuildData>((ctx, data) => data.ReleaseBuild)
+// .WithCriteria(() => HasEnvironmentVariable("NUGET_TOKEN"))
+.Does<BuildData>(build => {
+    var nugetToken = EnvironmentVariable("NUGET_TOKEN");
+    var pkgFiles = GetFiles($"{build.ArtifactsPath}package/*.nupkg");
+	Information($"Pushing {pkgFiles.Count} package files!");
+    NuGetPush(pkgFiles, new NuGetPushSettings {
+      Source = "https://api.nuget.org/v3/index.json",
+      ApiKey = nugetToken
+    });
 });

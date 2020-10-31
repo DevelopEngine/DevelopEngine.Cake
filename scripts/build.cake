@@ -1,8 +1,4 @@
-#tool nuget:?package=docfx.console&version=2.18.5
-#addin nuget:?package=Cake.DocFx&version=0.5.0
-
 var packageVersion = string.Empty;
-var testResultsPath = MakeAbsolute(Directory(artifacts + "./test-results"));
 
 ///////////////////////////////////////////////////////////////////////////////
 // SETUP / TEARDOWN
@@ -12,7 +8,7 @@ Setup(ctx =>
 {
 	// Executed BEFORE the first task.
 	Information("Running tasks...");
-	CreateDirectory(artifacts);
+	// CreateDirectory(artifacts);
 	packageVersion = BuildVersion(fallbackVersion);
 	if (FileExists("./build/.dotnet/dotnet.exe")) {
 		Information("Using local install of `dotnet` SDK!");
@@ -31,91 +27,74 @@ Teardown(ctx =>
 ///////////////////////////////////////////////////////////////////////////////
 
 Task("Clean")
-	.Does(() =>
+	.Does<BuildData>(data =>
 {
 	// Clean solution directories.
-	foreach(var path in projects.AllProjectPaths)
+	foreach(var path in data.Projects.AllProjectPaths)
 	{
 		Information("Cleaning {0}", path);
-		CleanDirectories(path + "/**/bin/" + configuration);
-		CleanDirectories(path + "/**/obj/" + configuration);
+		CleanDirectories(path + "/**/bin/" + data.Configuration);
+		CleanDirectories(path + "/**/obj/" + data.Configuration);
 	}
 	Information("Cleaning common files...");
-	CleanDirectory(artifacts);
+	CreateDirectory(data.ArtifactsPath);
+	CleanDirectory(data.ArtifactsPath);
 });
 
 Task("Restore")
-	.Does(() =>
+	.Does<BuildData>(data =>
 {
 	// Restore all NuGet packages.
 	Information("Restoring solution...");
-	DotNetCoreRestore(projects.SolutionPath);
+	DotNetCoreRestore(data.Projects.SolutionPath);
 });
 
 Task("Build")
 	.IsDependentOn("Clean")
 	.IsDependentOn("Restore")
-	.Does(() =>
+	.Does<BuildData>(build =>
 {
 	Information("Building solution...");
-	foreach (var project in projects.SourceProjectPaths) {
-		Information($"Building {project.GetDirectoryName()} for {configuration}");
+	// foreach (var project in projects.SourceProjectPaths) {
+	// 	Information($"Building {project.GetDirectoryName()} for {configuration}");
 		var settings = new DotNetCoreBuildSettings {
-			Configuration = configuration,
-			ArgumentCustomization = args => args.Append("/p:NoWarn=NU1701"),
+			Configuration = build.Configuration,
+			NoIncremental = true,
+			ArgumentCustomization = args => args.Append("/p:NoWarn=NU1701").Append($"/p:Version={build.BuildVersion}"),
 		};
-		DotNetCoreBuild(project.FullPath, settings);
-	}
+		DotNetCoreBuild(build.Projects.SolutionPath, settings);
+	// }
 	
 });
 
 Task("Run-Unit-Tests")
 	.IsDependentOn("Build")
-	.Does(() =>
+	.WithCriteria<BuildData>((ctx,build) => build.Projects.TestProjects.Any())
+	.Does<BuildData>(build =>
 {
+	var testResultsPath = MakeAbsolute(Directory(build.ArtifactsPath + "./test-results"));
     CreateDirectory(testResultsPath);
-	if (projects.TestProjects.Any()) {
+	var settings = new DotNetCoreTestSettings {
+		Configuration = build.Configuration
+	};
 
-		var settings = new DotNetCoreTestSettings {
-			Configuration = configuration
-		};
-
-		foreach(var project in projects.TestProjects) {
-			DotNetCoreTest(project.Path.FullPath, settings);
-		}
+	foreach(var project in build.Projects.TestProjects) {
+		DotNetCoreTest(project.Path.FullPath, settings);
 	}
-});
-
-Task("Generate-Docs")
-	.WithCriteria(() => FileExists("./docfx/docfx.json"))
-	.Does(() => 
-{
-	Information("Building metadata...");
-	DocFxMetadata("./docfx/docfx.json");
-	Information("Building docs...");
-	DocFxBuild("./docfx/docfx.json");
-	Information("Packaging built docs...");
-	Zip("./docfx/_site/", artifacts + "/docfx.zip");
-})
-.OnError(ex => 
-{
-	Warning(ex.Message);
-	Warning("Error generating documentation!");
 });
 
 Task("Post-Build")
 	.IsDependentOn("Build")
 	.IsDependentOn("Run-Unit-Tests")
-	.IsDependentOn("Generate-Docs")
-	.Does(() =>
+	.Does<BuildData>(build =>
 {
-	CreateDirectory(artifacts + "build");
-	foreach (var project in projects.SourceProjects) {
-		CreateDirectory(artifacts + "build/" + project.Name);
-		foreach (var framework in frameworks) {
-			var frameworkDir = $"{artifacts}build/{project.Name}/{framework}";
+	CreateDirectory(build.ArtifactsPath + "build");
+	foreach (var project in build.Projects.SourceProjects) {
+		CreateDirectory(build.ArtifactsPath + "build/" + project.Name);
+		foreach (var framework in build.Frameworks) {
+			var frameworkDir = $"{build.ArtifactsPath}build/{project.Name}/{framework}";
 			CreateDirectory(frameworkDir);
-			var files = GetFiles($"{project.Path.GetDirectory()}/bin/{configuration}/{framework}/*.*");
+			var files = GetFiles($"{project.Path.GetDirectory()}/bin/{build.Configuration}/{framework}/*.*");
 			CopyFiles(files, frameworkDir);
 		}
 	}
