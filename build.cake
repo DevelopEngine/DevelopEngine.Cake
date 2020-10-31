@@ -27,7 +27,7 @@ Setup<BuildData>(ctx =>
 {
 	Information("Running build setup...");
 	var publish = HasEnvironmentVariable("GITHUB_REF") 
-        && (EnvironmentVariable("GITHUB_REF").StartsWith("refs/tags/v") || EnvironmentVariable("GITHUB_REF") == "refs/heads/master");
+        && (EnvironmentVariable("GITHUB_REF").StartsWith("refs/tags/v") || EnvironmentVariable("GITHUB_REF") == "refs/heads/main");
 	return new BuildData {
 		ReleaseBuild = !string.IsNullOrWhiteSpace(EnvironmentVariable("NUGET_API_KEY")) && publish
 	};
