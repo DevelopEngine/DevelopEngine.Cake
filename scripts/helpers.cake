@@ -4,7 +4,7 @@ public partial class BuildData {
 	public string ArtifactsPath {get;set;} = "./dist/";
 	public string BuildVersion {get;set;}
 	public string Configuration {get;set;} = "Release";
-	public List<string> Frameworks {get;set;} = new List<string> { "netstandard2.0"};
+	public List<string> Frameworks {get;set;} = new List<string> { "net6.0"};
 }
 
 List<NuSpecContent> GetContent(IEnumerable<string> frameworks, ProjectCollection projects, string configuration, Func<SolutionProject, bool> projectFilter = null) {

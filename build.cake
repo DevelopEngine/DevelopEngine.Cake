@@ -74,7 +74,7 @@ Task("NuGet")
 		ProjectUrl		= new Uri("https://github.com/DevelopEngine/DevelopEngine.Cake"),
 		IconUrl			= new Uri("https://cdn.rawgit.com/cake-contrib/graphics/a5cf0f881c390650144b2243ae551d5b9f836196/png/cake-contrib-medium.png"),
 		License			= new NuSpecLicense { Type = "expression", Value = "MIT" },
-		Copyright		= "Alistair Chapman 2020",
+		Copyright		= "Alistair Chapman 2022",
 		Tags			= new[] { "cake" },
 		OutputDirectory = artifacts + "/package",
 		Files			= content
