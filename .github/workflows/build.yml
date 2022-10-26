@@ -18,7 +18,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.x'
+        dotnet-version: '6.0.x'
     - name: Restore Tools
       shell: bash
       run: |
@@ -27,7 +27,7 @@ jobs:
       uses: cake-build/cake-action@v1
       with:
         target: Default
-        cake-bootstrap: true
+        cake-version: tool-manifest
         verbosity: Verbose
       env:
         NUGET_TOKEN: ${{secrets.NUGET_TOKEN}}

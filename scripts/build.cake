@@ -46,7 +46,7 @@ Task("Restore")
 {
 	// Restore all NuGet packages.
 	Information("Restoring solution...");
-	DotNetCoreRestore(data.Projects.SolutionPath);
+	DotNetRestore(data.Projects.SolutionPath);
 });
 
 Task("Build")
@@ -57,12 +57,12 @@ Task("Build")
 	Information("Building solution...");
 	// foreach (var project in projects.SourceProjectPaths) {
 	// 	Information($"Building {project.GetDirectoryName()} for {configuration}");
-		var settings = new DotNetCoreBuildSettings {
+		var settings = new DotNetBuildSettings {
 			Configuration = build.Configuration,
 			NoIncremental = true,
 			ArgumentCustomization = args => args.Append("/p:NoWarn=NU1701").Append($"/p:Version={build.BuildVersion}"),
 		};
-		DotNetCoreBuild(build.Projects.SolutionPath, settings);
+		DotNetBuild(build.Projects.SolutionPath, settings);
 	// }
 	
 });
@@ -74,12 +74,12 @@ Task("Run-Unit-Tests")
 {
 	var testResultsPath = MakeAbsolute(Directory(build.ArtifactsPath + "./test-results"));
     CreateDirectory(testResultsPath);
-	var settings = new DotNetCoreTestSettings {
+	var settings = new DotNetTestSettings {
 		Configuration = build.Configuration
 	};
 
 	foreach(var project in build.Projects.TestProjects) {
-		DotNetCoreTest(project.Path.FullPath, settings);
+		DotNetTest(project.Path.FullPath, settings);
 	}
 });
 
