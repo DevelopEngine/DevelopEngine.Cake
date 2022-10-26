@@ -4,7 +4,7 @@ Task("NuGet")
 {
     Information("Building NuGet package");
     CreateDirectory(build.ArtifactsPath + "package/");
-    var packSettings = new DotNetCorePackSettings {
+    var packSettings = new DotNetPackSettings {
         Configuration = build.Configuration,
         NoBuild = true,
         OutputDirectory = $"{build.ArtifactsPath}package",
@@ -14,6 +14,6 @@ Task("NuGet")
     };
     foreach(var project in build.Projects.SourceProjectPaths) {
         Information($"Packing {project.GetDirectoryName()}...");
-        DotNetCorePack(project.FullPath, packSettings);
+        DotNetPack(project.FullPath, packSettings);
     }
 });
